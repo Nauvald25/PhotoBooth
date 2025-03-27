@@ -1,0 +1,671 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Online Photobooth</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+
+        <style>
+        .bg-animation {
+            background: linear-gradient(135deg, #070808, #14b89a, #424544, #0f1984);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+
+        .float-animation {
+            animation: float 5s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        
+
+        .pulse-animation {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.07); }
+            100% { transform: scale(1); }
+        }
+        
+    
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            box-shadow: 0px 4px 15px rgba(255, 65, 108, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 6px 18px rgba(255, 65, 108, 0.6);
+        }
+        
+
+        canvas.rounded {
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        canvas.rounded:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+
+        #timer {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+
+        .photo-strip:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: 0.3s ease;
+        }
+        
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            animation: float-up 10s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes float-up {
+            0% { transform: translateY(0) rotate(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+
+        }
+
+        @media screen and (max-width: 768px) {
+  
+    .bg-animation {
+        background-size: 200% 200%;
+        animation: gradientBG 10s ease infinite;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 10px 18px;
+    }
+
+    video, canvas {
+        width: 100%;
+        height: auto;
+    }
+
+
+    #timer {
+        font-size: 1.2rem;
+        padding: 8px 12px;
+        top: 10px;
+        left: 10px;
+    }
+
+ 
+    .bubble {
+        opacity: 0.2;
+    }
+
+
+    .float-animation {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .btn-primary {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+}
+
+    </style>    
+    </head>
+    <body class="flex flex-col items-center justify-center min-h-screen bg-animation">
+        <div id="bubbles"></div>
+        
+        <div class="rounded-xl bg-white bg-opacity-80 p-6 backdrop-blur-sm shadow-lg mb-4 fade-in">
+            <h1 class="text-3xl font-bold mb-1 text-center text-black float-animation">Nauval Photobooth</h1>
+            <p class="text-sm text-center text-black mb-3">Photobooth Online @muhamad_nauvald25</p>
+        </div>
+        
+        <div class="flex flex-row items-start gap-8 fade-in">
+
+            <div class="flex flex-col items-center">
+                <div class="relative rounded-xl overflow-hidden p-1 bg-gradient-to-r from-gray-400 to-blue-500 shadow-lg mb-4">
+                    <div class="relative w-64 h-48">
+                        <video id="video" class="rounded-lg transform scale-x-[-1] w-64 h-auto" autoplay></video>
+                        
+                        <div id="flash" class="absolute inset-0 bg-white opacity-0 transition-opacity rounded-lg"></div>
+                
+                        <div id="timer" class="hidden">3</div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-2 w-full bg-white rounded-xl shadow-md p-4">
+                    <div id="effect-control" class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Effect:</label>
+                        <select id="effectSelect" class="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="none">No Effect</option>
+                            <option value="sepia">Sepia</option>
+                            <option value="grayscale">Grayscale</option>
+                            <option value="invert">Invert</option>
+                            <option value="duotone">Duotone</option>
+                        </select>
+                    </div>
+                    
+                    <div id="overlay-control" class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Frame Overlay:</label>
+                        <select id="overlaySelect" class="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            <option value="none">No Frame</option>
+                            <option value="hearts">Hearts</option>
+                            <option value="stars">Stars</option>
+                            <option value="squares">Squares</option>
+                            <option value="lines">Lines</option>
+                        </select>
+                    </div>
+                    
+                
+                    <div id="bg-color-control" class="flex items-center justify-between mb-3">
+                        <label for="bgColor" class="text-sm font-medium text-gray-700">Background Color:</label>
+                        <input type="color" id="bgColor" value="#ffffff" class="h-8 w-8 border rounded cursor-pointer">
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="capture" class="btn px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm flex items-center justify-center">
+                            <i class="fas fa-camera mr-1"></i> Take Photos
+                        </button>
+                        <button id="download" class="btn px-3 py-1.5 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-sm hidden flex items-center justify-center">
+                            <i class="fas fa-download mr-1"></i> Save
+                        </button>
+                        <button id="retry" class="btn px-3 py-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg text-sm hidden flex items-center justify-center">
+                            <i class="fas fa-redo mr-1"></i> Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="resultContainer" class="photo-strip hidden fade-in">
+                <canvas id="mergedCanvas" class="rounded"></canvas>
+        
+            </div>
+        </div>
+        
+        <canvas id="canvas" class="hidden"></canvas>
+        
+        <script>
+            const video = document.getElementById('video');
+    const captureBtn = document.getElementById('capture');
+    const downloadBtn = document.getElementById('download');
+    const retryBtn = document.getElementById('retry');
+    const canvas = document.getElementById('canvas');
+    const mergedCanvas = document.getElementById('mergedCanvas');
+    const timerDisplay = document.getElementById('timer');
+    const bgColorPicker = document.getElementById('bgColor');
+    const resultContainer = document.getElementById('resultContainer');
+    const effectSelect = document.getElementById('effectSelect');
+    const overlaySelect = document.getElementById('overlaySelect');
+    const flashElement = document.getElementById('flash');
+    const ctx = canvas.getContext('2d');
+    const mergedCtx = mergedCanvas.getContext('2d');
+    const effectControl = document.getElementById('effect-control');
+    const overlayControl = document.getElementById('overlay-control');
+    const bgColorControl = document.getElementById('bg-color-control');
+    let capturedImages = [];
+    const styles = ['none', 'none', 'none', 'none'];
+    let currentImages = [];
+    let isCapturing = false;
+    let originalImages = [];
+    const photoWidth = 140;
+    const photoHeight = 105;
+    const padding = 8; 
+    effectControl.style.display = 'none';
+    overlayControl.style.display = 'none';
+    bgColorControl.style.display = 'none';
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+    if (width < 2 * radius) radius = width / 2;
+    if (height < 2 * radius) radius = height / 2;
+    this.beginPath();
+    this.moveTo(x + radius, y);
+    this.arcTo(x + width, y, x + width, y + height, radius);
+    this.arcTo(x + width, y + height, x, y + height, radius);
+    this.arcTo(x, y + height, x, y, radius);
+    this.arcTo(x, y, x + width, y, radius);
+    this.closePath();
+    return this;
+    }
+
+    function requestCamera() {
+    const constraints = {
+    video: {
+    width: { ideal: 1920 },
+    height: { ideal: 1080 }
+    }
+    };
+    
+
+    navigator.mediaDevices.getUserMedia(constraints)
+    .then(stream => {
+    video.srcObject = stream;
+    video.play();
+    video.addEventListener('loadedmetadata', () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    mergedCanvas.width = video.videoWidth;
+    mergedCanvas.height = video.videoHeight;
+    });
+    })
+    .catch(err => {
+    console.error('Error accessing webcam at high resolution:', err);
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+    video.srcObject = stream;
+    video.play();
+    video.addEventListener('loadedmetadata', () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    mergedCanvas.width = video.videoWidth;
+    mergedCanvas.height = video.videoHeight;
+    });
+    })
+    .catch(err => console.error('Error accessing webcam:', err));
+    });
+    }
+
+    function triggerFlash() {
+    flashElement.style.opacity = '0.9';
+    setTimeout(() => {
+    flashElement.style.opacity = '0';
+    }, 200);
+    }
+    function applyEffect(ctx, effectType, width, height) {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    switch(effectType) {
+    case 'sepia':
+    for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+    }
+    break;
+
+    case 'grayscale':
+    for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    data[i] = avg;
+    data[i + 1] = avg;
+    data[i + 2] = avg;
+    }
+    break;
+
+    case 'invert':
+    for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];
+    data[i + 1] = 255 - data[i + 1];
+    data[i + 2] = 255 - data[i + 2];
+    }
+    break;
+
+    case 'duotone':
+    for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+    if (avg < 128) {
+    data[i] = avg * 2;     
+    data[i + 1] = 0;       
+    data[i + 2] = avg / 2; 
+    } else {
+    data[i] = 255;         
+    data[i + 1] = (avg - 128) * 2; 
+    data[i + 2] = 255;     
+    }
+    }
+    break;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    }
+
+    function drawOverlay(ctx, type, width, height) {
+    ctx.save();
+
+    switch(type) {
+    case 'hearts':
+    ctx.fillStyle = 'rgba(255, 105, 180, 0.3)';
+    for (let i = 0; i < 15; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const size = Math.random() * 10 + 5;
+    ctx.beginPath();
+    ctx.moveTo(x, y + size/4);
+    ctx.quadraticCurveTo(x, y, x - size/2, y);
+    ctx.quadraticCurveTo(x - size, y, x - size, y + size/2);
+    ctx.quadraticCurveTo(x - size, y + size, x, y + size * 1.5);
+    ctx.quadraticCurveTo(x + size, y + size, x + size, y + size/2);
+    ctx.quadraticCurveTo(x + size, y, x + size/2, y);
+    ctx.quadraticCurveTo(x, y, x, y + size/4);
+    ctx.fill();
+    }
+    break;
+
+    case 'stars':
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.4)';
+    for (let i = 0; i < 20; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const size = Math.random() * 6 + 4;
+    const rotation = Math.random() * Math.PI;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.beginPath();
+    for (let j = 0; j < 5; j++) {
+    ctx.lineTo(Math.cos((j * 4 * Math.PI) / 5) * size, 
+    Math.sin((j * 4 * Math.PI) / 5) * size);
+    ctx.lineTo(Math.cos(((j * 4 + 2) * Math.PI) / 5) * size / 2, 
+    Math.sin(((j * 4 + 2) * Math.PI) / 5) * size / 2);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    }
+    break;
+    case 'squares':
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < 50; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const size = Math.random() * 10 + 5;
+
+    ctx.fillRect(x, y, size, size);
+    }
+    break;
+
+    case 'lines':
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 50; i++) {
+    const x1 = Math.random() * width;
+    const y1 = Math.random() * height;
+    const x2 = Math.random() * width;
+    const y2 = Math.random() * height;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    }
+    break;
+    }
+
+    ctx.restore();
+    }
+
+    function updateMergedCanvas() {
+    const numPhotos = currentImages.length;
+    const scaleFactor = 2;
+    const scaledWidth = (photoWidth + (padding * 2)) * scaleFactor;
+    const scaledHeight = ((photoHeight * numPhotos) + (padding * (numPhotos + 1))) * scaleFactor;
+    mergedCanvas.width = scaledWidth;
+    mergedCanvas.height = scaledHeight;
+    mergedCanvas.style.width = `${scaledWidth/scaleFactor}px`;
+    mergedCanvas.style.height = `${scaledHeight/scaleFactor}px`;
+    mergedCtx.fillStyle = bgColorPicker.value;
+    mergedCtx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
+    for (let i = 0; i < currentImages.length; i++) {
+    const item = currentImages[i];
+    const y = (i * photoHeight + (i + 1) * padding) * scaleFactor;
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = item.img.width;
+    tempCanvas.height = item.img.height;
+    tempCtx.drawImage(item.img, 0, 0);
+    if (effectSelect.value !== 'none') {
+    applyEffect(tempCtx, effectSelect.value, tempCanvas.width, tempCanvas.height);
+    }
+    if (overlaySelect.value !== 'none') {
+    drawOverlay(tempCtx, overlaySelect.value, tempCanvas.width, tempCanvas.height);
+    }
+    const imgRatio = tempCanvas.width / tempCanvas.height;
+
+    let drawWidth, drawHeight;
+    if (imgRatio > 1) {
+    drawWidth = photoWidth * scaleFactor;
+    drawHeight = (photoWidth / imgRatio) * scaleFactor;
+    } else {
+    drawHeight = photoHeight * scaleFactor;
+    drawWidth = (photoHeight * imgRatio) * scaleFactor;
+    }
+    const xOffset = (mergedCanvas.width - drawWidth) / 2;
+    mergedCtx.save();
+    mergedCtx.roundRect(padding * scaleFactor, y, photoWidth * scaleFactor, photoHeight * scaleFactor, 8 * scaleFactor).clip();
+    mergedCtx.drawImage(tempCanvas, xOffset, y, drawWidth, drawHeight);
+    mergedCtx.restore();
+    }
+    }
+
+    function capturePhoto(style, index) {
+    return new Promise(resolve => {
+  
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+ 
+    const originalImgData = canvas.toDataURL('image/png', 1.0);
+
+ 
+    const img = new Image();
+    img.onload = () => {
+
+    originalImages.push(img);
+
+   
+    currentImages.push({
+    img: img,
+    index: index
+    });
+
+    updateMergedCanvas();
+    resolve();
+    };
+    img.src = originalImgData;
+    });
+    }
+
+  
+    function countdown(seconds) {
+    return new Promise(resolve => {
+    timerDisplay.classList.remove('hidden');
+    let timeLeft = seconds;
+    timerDisplay.textContent = timeLeft;
+    const interval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+    clearInterval(interval);
+    timerDisplay.classList.add('hidden');
+    triggerFlash();
+    resolve();
+    } else {
+    timerDisplay.textContent = timeLeft;
+    }
+    }, 1000);
+    });
+    }
+
+    
+    function createBubbles() {
+    const bubbleContainer = document.getElementById('bubbles');
+    const bubbleCount = 20;
+
+    for (let i = 0; i < bubbleCount; i++) {
+    const bubble = document.createElement('div');
+    bubble.classList.add('bubble');
+
+
+    const size = Math.random() * 60 + 20;
+    const left = Math.random() * 100;
+    const duration = Math.random() * 15 + 5;
+    const delay = Math.random() * 10;
+
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `${left}%`;
+    bubble.style.bottom = `-${size}px`;
+    bubble.style.animationDuration = `${duration}s`;
+    bubble.style.animationDelay = `${delay}s`;
+
+    bubbleContainer.appendChild(bubble);
+    }
+    }
+
+    function showEditControls() {
+    effectControl.style.display = 'block';
+    overlayControl.style.display = 'block';
+    bgColorControl.style.display = 'block';
+    }
+
+  
+    requestCamera();
+    createBubbles();
+
+
+    captureBtn.addEventListener('click', async () => {
+    if (isCapturing) return; 
+
+    isCapturing = true;
+    captureBtn.disabled = true;
+    captureBtn.classList.add('opacity-50');
+    downloadBtn.classList.add('hidden');
+    retryBtn.classList.add('hidden');
+
+  
+    effectControl.style.display = 'none';
+    overlayControl.style.display = 'none';
+    bgColorControl.style.display = 'none';
+
+    capturedImages = [];
+    currentImages = [];
+    originalImages = [];
+    resultContainer.classList.add('hidden');
+
+    try {
+    for (let i = 0; i < styles.length; i++) {
+    await countdown(3);
+
+  
+    await capturePhoto(styles[i], i);
+
+
+    if (i === 0) {
+    resultContainer.classList.remove('hidden');
+    }
+    }
+
+    showEditControls();
+    downloadBtn.classList.remove('hidden');
+    retryBtn.classList.remove('hidden');
+
+    } catch (error) {
+    console.error('Error during capture:', error);
+    } finally {
+    isCapturing = false;
+    captureBtn.disabled = false;
+    captureBtn.classList.remove('opacity-50');
+    }
+    });
+
+   
+    effectSelect.addEventListener('change', updateMergedCanvas);
+    overlaySelect.addEventListener('change', updateMergedCanvas);
+    bgColorPicker.addEventListener('input', updateMergedCanvas);
+
+  
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'photobooth_nauval.png';  
+        link.href = mergedCanvas.toDataURL('image/png', 1.0);  
+        link.click();
+    });
+
+
+  
+    retryBtn.addEventListener('click', () => {
+    capturedImages = [];
+    currentImages = [];
+    originalImages = [];
+    resultContainer.classList.add('hidden');
+    downloadBtn.classList.add('hidden');
+    retryBtn.classList.add('hidden');
+
+
+    effectControl.style.display = 'none';
+    overlayControl.style.display = 'none';
+    bgColorControl.style.display = 'none';
+    });
+    </script>
+    </body>
+
+    </html>
+
+
+
